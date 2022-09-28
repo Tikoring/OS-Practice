@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
+#include <time.h>
 
 int main (void) {
     int fd, n;
@@ -14,7 +15,8 @@ int main (void) {
     struct dirent *dent;
     long loc;
     struct stat statBuf;
-
+    time_t t;
+    
     char *cwd = getcwd (NULL, BUFSIZ);
     if ((dp = opendir (cwd)) == NULL) {
         perror ("opendir: source");
@@ -41,7 +43,7 @@ int main (void) {
         perror ("data.txt is not regular file");
         exit (1);
     }
-    if (((unsigned int)statBuf.st_mode) & S_IRWXG | S_IRWXO) {
+    if (((unsigned int)statBuf.st_mode) & (S_IRWXG | S_IRWXO)) {
         perror ("data.txt must be protected");
         exit (1);
     }
@@ -51,8 +53,18 @@ int main (void) {
         perror ("Open data.txt");
         exit (1);
     }
-    
+
+    //기존에 작성된 file이 존재하는 경우 offset을 맨 끝으로 이동
+    if (statBuf.st_size > 0) {
+        lseek (fd, 0, SEEK_END);
+    }
+
     while (1) {
+        stat ("data.txt", &statBuf);
+        //writer가 재실행 된 경우 offset을 가장 앞으로 이동
+        if (statBuf.st_size == 0) {
+            lseek (fd, 0, SEEK_SET);
+        }
         n = read(fd, buf, 255);
         buf[n] = '\0';
 
