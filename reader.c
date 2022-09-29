@@ -37,7 +37,7 @@ int main (void) {
     }
 
     closedir (dp);
-
+    //file이 존재하지만 제약에 걸리는 경우 차단
     stat ("data.txt", &statBuf);
     if (((unsigned int)statBuf.st_mode & S_IFMT) != S_IFREG) {
         perror ("data.txt is not regular file");
